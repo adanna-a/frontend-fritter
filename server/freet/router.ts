@@ -25,15 +25,54 @@ const router = express.Router();
  * @throws {404} - If no user has given author
  *
  */
-router.get(
+/**
+ * Get freets by country.
+ *
+ * @name GET /api/freets?country=country
+ *
+ * @return {FreetResponse[]} - An array of freets associated with country, country
+ * @throws {400} - If country is not given
+ * @throws {404} - If no user has given country
+ *
+ */
+/**
+ * Get freets by topic.
+ *
+ * @name GET /api/freets?topic=topic
+ *
+ * @return {FreetResponse[]} - An array of freets associated with topic, topic
+ * @throws {400} - If topic is not given
+ */
+ router.get(
   '/',
   async (req: Request, res: Response, next: NextFunction) => {
-    // Check if author query parameter was supplied
+    // Check if authorId query parameter was supplied
     if (req.query.author !== undefined) {
       next();
       return;
+    } else if (req.query.topic !== undefined) {
+      const topicFreets = await FreetCollection.findAllByTopic(req.query.topic as string);
+    
+      if (topicFreets.length > 0) {
+        const response = topicFreets.map(util.constructFreetResponse);
+        res.status(200).json(response);
+      } else {
+        const response = `There are no freets associated with topic ${req.query.topic}.`
+        res.status(200).json(response);
+      } 
+      return; 
+    } else if (req.query.country !== undefined) {
+      const countryFreets = await FreetCollection.findAllByCountry(req.query.country as string);
+    
+      if (countryFreets.length > 0) {
+        const response = countryFreets.map(util.constructFreetResponse);
+        res.status(200).json(response);
+      } else {
+        const response = `There are no freets associated with country ${req.query.country}.`
+        res.status(200).json(response);
+      } 
+      return;
     }
-
     const allFreets = await FreetCollection.findAll();
     const response = allFreets.map(util.constructFreetResponse);
     res.status(200).json(response);
@@ -66,8 +105,8 @@ router.post(
     freetValidator.isValidFreetContent
   ],
   async (req: Request, res: Response) => {
-    const userId = (req.session.userId as string) ?? ''; // Will not be an empty string since its validated in isUserLoggedIn
-    const freet = await FreetCollection.addOne(userId, req.body.content);
+    const authorId = (req.session.userId as string) ?? ''; // Will not be an empty string since its validated in isUserLoggedIn
+    const freet = await FreetCollection.addOne(authorId, req.body.content, req.body.topic, req.body.country);
 
     res.status(201).json({
       message: 'Your freet was created successfully.',
@@ -123,7 +162,7 @@ router.patch(
     freetValidator.isValidFreetContent
   ],
   async (req: Request, res: Response) => {
-    const freet = await FreetCollection.updateOne(req.params.freetId, req.body.content);
+    const freet = await FreetCollection.updateOne(req.params.freetId, req.body.content, req.body.topic, req.body.country);
     res.status(200).json({
       message: 'Your freet was updated successfully.',
       freet: util.constructFreetResponse(freet)
