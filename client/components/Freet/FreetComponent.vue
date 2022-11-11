@@ -6,35 +6,41 @@
     class="freet"
   >
     <header>
-      <h3 class="author">
-        @{{ freet.author }}
-      </h3>
+      <div class="top">
       <div
-        v-if="$store.state.username === freet.author"
+        style="font-size: 30px; font-weight: 500;"
         class="actions"
       >
+      @{{ freet.author }}
         <button
-          v-if="editing"
+          style="background-color: white; border: 0px;"
+          v-if="editing && $store.state.username === freet.author"
           @click="submitEdit"
         >
-          ✅ Save changes
+          ✅ 
         </button>
         <button
-          v-if="editing"
+          v-if="editing && $store.state.username === freet.author"
+          style="background-color: white; border: 0px;"
           @click="stopEditing"
         >
-          🚫 Discard changes
+          🚫
         </button>
         <button
-          v-if="!editing"
+          v-if="!editing && $store.state.username === freet.author"
+          style="background-color: white; border: 0px;"
           @click="startEditing"
         >
-          ✏️ Edit
+          ✏️
         </button>
-        <button @click="deleteFreet">
-          🗑️ Delete
+        <button 
+        v-if="$store.state.username === freet.author"
+        style="background-color: white; border: 0px;"
+        @click="deleteFreet">
+          🗑️
         </button>
       </div>
+    </div>
     </header>
     <div v-if="editing">Content:</div>
     <textarea
@@ -47,7 +53,7 @@
       v-else
       class="content"
     >
-    Content: {{ freet.content }}
+    {{ freet.content }}
     </p>
     
     <div v-if="editing">Topic:</div>
@@ -59,10 +65,12 @@
     />
     <p
       v-else
+      style="font-size: 10px; color: grey;"
       class="topic"
     >
-      Topic: {{ freet.topic }}
+    Topic: {{ freet.topic }}
     </p>
+    
     <div v-if="editing">Country:</div>
     <textarea
       v-if="editing"
@@ -72,27 +80,59 @@
     />
     <p
       v-else
+      style="font-size: 10px; color: grey;"
       class="country"
     >
       Country: {{ freet.country }}
     </p>
-    <p class="info">
+
+    <p style="font-size: 10px; color: grey;" class="info">
       Posted at {{ freet.dateModified }}
       <i v-if="freet.edited">(edited)</i>
     </p>
+
     <button 
-      v-if="!liked"
+      v-if="!liked && $store.state.username"
+      style="background-color: white; border: 0px;"
       @click="likeFreet">
-      ❤️ Like
+      ♡ {{rank}} likes
     </button>
     <button 
-      v-else
+      v-if="liked && $store.state.username"
+      style="background-color: white; border: 0px;"
       @click="unlikeFreet">
-      💔 Unlike
+      ❤️ {{rank}} likes
     </button>
-    <div>
-      Likes: {{rank}}
+
+    <button
+      style="background-color: white; border: 0px;"
+      @click="showComments = !showComments">
+      💬 {{comments.length}} comments
+    </button>
+    <div v-if="showComments">
+      <section  v-if="$store.state.username">
+        <CreateCommentForm
+        :freetId=freet._id
+        />
+      </section>
+      <section
+          v-if="comments.length"
+        >
+          <CommentComponent
+            v-for="comment in comments"
+            :key="comment.id"
+            :comment="comment"
+          />
+      </section>
+      <article
+          v-else
+        >
+          <h3>No Comments, write the first!</h3>
+      </article>
+
     </div>
+
+
     <section class="alerts">
       <article
         v-for="(status, alert, index) in alerts"
@@ -106,8 +146,12 @@
 </template>
 
 <script>
+import CommentComponent from '@/components/Comment/CommentComponent.vue';
+import CreateCommentForm from '@/components/Comment/CreateCommentForm.vue';
+
 export default {
   name: 'FreetComponent',
+  components: {CommentComponent, CreateCommentForm},
   props: {
     // Data from the stored freet
     freet: {
@@ -124,7 +168,9 @@ export default {
       liked: false,
       rank: 0,
       likers: [],
-      alerts: {} // Displays success/error messages encountered during freet modification
+      alerts: {}, // Displays success/error messages encountered during freet modification
+      showComments: false,
+      comments: [],
     };
   },
   methods: {
@@ -153,7 +199,9 @@ export default {
       const params = {
         method: 'DELETE',
       };
+      this.comments = [];
       this.freet_request(params);
+
     },
     submitEdit() {
       /**
@@ -204,6 +252,16 @@ export default {
         callback: () => {}
       };
       this.like_request(params);
+    },
+    getComments() {
+      /**
+       * Get the comments for the freet
+       */
+      const params = {
+        method: 'GET',
+        callback: () => {}
+      };
+      this.comment_request(params);
     },
     async freet_request(params) {
       /**
@@ -256,7 +314,6 @@ export default {
             const res = await r.json();
             throw new Error(res.error);
           }
-          this.editing = false;
           this.$store.commit('refreshFreets');
           params.callback();
         } else if (options.method == 'DELETE') {
@@ -265,7 +322,6 @@ export default {
             const res = await r.json();
             throw new Error(res.error);
           }
-          this.editing = false;
           this.$store.commit('refreshFreets');
           params.callback();
        } else if (options.method == 'GET') {
@@ -275,42 +331,85 @@ export default {
           if (!r.ok) {
             throw new Error(res.error);
           }
-          this.editing = false;
-
           const likers = [];
 
           for (var i = 0; i < res['likes'].length; i++) {
-            console.log('in this right here!!');
-            console.log(res['likes']);
             likers.push(res['likes'][i]['author']);
           }
           this.likers = likers;
           this.rank = likers.length;
           
           this.liked = likers.includes(this.$store.state.username);
-          console.log('this.likers:', this.likers, '\n', 'this.rank:' , this.rank, '\n', 'this.liked:', this.liked);
-          console.log(this.likers);
           params.callback();
         }
       } catch (e) {
         this.$set(this.alerts, e, 'error');
         setTimeout(() => this.$delete(this.alerts, e), 3000);
       }
-    }
+    },
+    async comment_request(params) {
+      /**
+       * Submits a request to the comments endpoint
+       * @param params - Options for the request
+       * @param params.body - Body for the request, if it exists
+       * @param params.callback - Function to run if the the request succeeds
+       */
+      const options = {
+        method: params.method, headers: {'Content-Type': 'application/json'}
+      };
+
+      try {
+        if (options.method == 'GET') {
+          const r = await fetch(`/api/comments?freetId=${this.freet._id}`, options);
+          const res = await r.json();
+
+          if (!r.ok) {
+            throw new Error(res.error);
+          }
+
+          const comments = [];
+
+          for (var i = 0; i < res.length; i++) {
+            comments.push({author: res[i]['author'], content: res[i]['content'], dateCreated: res[i]['dateCreated'], id:  res[i]['_id'], freetId:  res[i]['freetId']});
+          }
+          this.comments = comments;
+        }
+      } catch (e) {
+        this.$set(this.alerts, e, 'error');
+        setTimeout(() => this.$delete(this.alerts, e), 3000);
+      }
+    },
   },
   created() {
     this.getLikes();
+    this.getComments();
   },
   updated() {
     this.getLikes();
+    this.getComments();
   }
 };
 </script>
 
 <style scoped>
 .freet {
-    border: 1px solid #111;
     padding: 20px;
+    margin: 20px;
+    width: 700px;
+    
     position: relative;
+    background-color: white;
+    filter: drop-shadow(0px 1px 1px #5e5e5e);
+}
+header {
+  grid-auto-flow: column; 
+}
+.author {
+  font-size: 30px;
+  width: 0px;
+}
+
+.top {
+  grid-auto-flow: column;
 }
 </style>

@@ -36,3 +36,15 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+
+* {
+  font-family: Helvetica;
+}
+
+main {
+  margin-left: 240px;
+}
+
+</style>

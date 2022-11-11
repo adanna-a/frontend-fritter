@@ -51,6 +51,12 @@
 
 export default {
   name: 'BlockForm',
+  props: {
+    freetId: {
+      type: String,
+      required: false,
+    }
+  },
   data() {
     /**
      * Options for submitting this form.
@@ -75,16 +81,32 @@ export default {
         headers: {'Content-Type': 'application/json'},
         credentials: 'same-origin' // Sends express-session credentials with request
       };
+      console.log(this.url, this.method);
       if (this.hasBody) {
-        options.body = JSON.stringify(Object.fromEntries(
-          this.fields.map(field => {
-            const {id, value} = field;
-            field.value = '';
-            return [id, value];
-          })
-        ));
-      }
+        if (this.url === '/api/comments' && this.method == 'POST') {
 
+          const inputFields = Object.fromEntries(
+            this.fields.map(field => {
+              const {id, value} = field;
+              field.value = '';
+              return [id, value];
+            })
+          );
+
+          const idField = {freetId: this.freetId}
+
+          options.body = JSON.stringify(Object.assign({}, inputFields, idField));
+        } else {
+          options.body = JSON.stringify(Object.fromEntries(
+            this.fields.map(field => {
+              const {id, value} = field;
+              field.value = '';
+              return [id, value];
+            })
+          ));
+        }
+      }
+   
       try {
         const r = await fetch(this.url, options);
         if (!r.ok) {
@@ -117,13 +139,17 @@ export default {
 
 <style scoped>
 form {
-  border: 1px solid #111;
   padding: 0.5rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  margin-bottom: 14px;
   position: relative;
+  padding: 20px;
+  margin: 20px;
+  width: 700px;
+  position: relative;
+  /* background-color: white;
+  filter: drop-shadow(0px 1px 1px #5e5e5e); */
 }
 
 article > div {
@@ -145,7 +171,7 @@ form h3 {
 }
 
 textarea {
-   font-family: inherit;
+   font-family: Helvetica;
    font-size: inherit;
 }
 </style>

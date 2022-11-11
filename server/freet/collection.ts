@@ -8,7 +8,7 @@ import UserCollection from '../user/collection';
  * stored in MongoDB, including adding, finding, updating, and deleting freets.
  * Feel free to add additional operations in this file.
  *
- * Note: HydratedDocument<Freet> is the output of the FreetModel() constructor,
+ * Note: HydratedDocument<Freet> is the output of the FreetModel() btor,
  * and contains all the information in Freet. https://mongoosejs.com/docs/typescript.html
  */
 class FreetCollection {
@@ -32,7 +32,7 @@ class FreetCollection {
       country,
     });
     await freet.save(); // Saves freet to MongoDB
-    return freet.populate('authorId');
+    return freet.populate(['authorId']);
   }
 
   /**

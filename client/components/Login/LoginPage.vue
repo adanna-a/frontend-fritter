@@ -5,7 +5,7 @@
   <main>
     <section>
       <header>
-        <h2>New to Fritter?</h2>
+        <h2>Join Fritter?</h2>
       </header>
       <RegisterForm />
     </section>
@@ -30,3 +30,15 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+
+* {
+  font-family: Helvetica;
+}
+
+main {
+  margin-left: 240px;
+}
+
+</style>

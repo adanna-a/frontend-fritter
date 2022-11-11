@@ -3,24 +3,30 @@
 <!-- This navbar takes advantage of both flex and grid layouts for positioning elements; feel free to redesign as you see fit! -->
 
 <template>
-  <nav>
-    <div class="left">
-      <img src="../../public/logo.svg">
+  <!-- <nav> -->
+    <div class="sidebar">
+    <div class="header">
+      <img src="../../public/fritter-logo.png" style="height:45px;">
       <h1 class="title">
         Fritter
       </h1>
     </div>
-    <div class="right">
-      <router-link to="/">
+    <div class="pages">
+      <router-link style="text-decoration: none; color: inherit; font-size: 22px;" to="/">
         Home
       </router-link>
+      <router-link style="text-decoration: none; color: inherit; font-size: 22px;" to="/feeds">
+        Feeds
+      </router-link>
       <router-link
+        style="text-decoration: none; color: inherit; font-size: 22px;"
         v-if="$store.state.username"
         to="/account"
       >
         Account
       </router-link>
       <router-link
+        style="text-decoration: none; color: inherit; font-size: 22px;"
         v-else
         to="/login"
       >
@@ -36,39 +42,65 @@
         <p>{{ alert }}</p>
       </article>
     </section>
-  </nav>
+  </div>
+  <!-- </nav> -->
 </template>
 
 <style scoped>
-nav {
+/* nav {
     padding: 1vw 2vw;
     background-color: #ccc;
     display: flex;
     justify-content: space-between;
     align-items: center;
     position: relative;
+} */
+
+.sidebar {
+  height: 100%;
+  width: 240px;
+  position: fixed;
+  z-index: 1;
+  top: 0; 
+  left: 0;
+  background-color: white;
+  overflow-x: hidden;
+  padding-top: 20px;
+  padding-left: 25px;
 }
 
+* {
+  font-family: Helvetica;
+}
 .title {
     font-size: 32px;
     margin: 0 5px;
+}
+
+.pageTitles {
+  font-size: 22px;
+  color: black;
+  text-decoration: none;
 }
 
 img {
     height: 32px;
 }
 
-.left {
+.header {
 	display: flex;
 	align-items: center;
+  
 }
 
-.right {
+.pages {
     font-size: 20px;
     display: grid;
     gap: 16px;
-    grid-auto-flow: column;
+    grid-auto-flow: row;
     align-items: center;
+    margin-top: 20px;
+    height: 30%;
 }
 
 .right a {
